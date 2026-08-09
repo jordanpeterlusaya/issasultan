@@ -15,14 +15,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const video = document.getElementById("hero-video");
   const soundToggle = document.getElementById("sound-toggle");
   const soundLabel = soundToggle?.querySelector(".sound-toggle-label");
+  let soundEnabled = false;
+  let unlockCleanup = null;
 
   const setSoundUI = (soundOn) => {
+    soundEnabled = soundOn;
     if (!soundToggle || !soundLabel) return;
     soundToggle.setAttribute("aria-pressed", soundOn ? "true" : "false");
     soundToggle.classList.toggle("is-on", soundOn);
     soundLabel.textContent = soundOn
       ? soundLabel.dataset.labelOn
       : soundLabel.dataset.labelOff;
+  };
+
+  const muteVideo = () => {
+    if (!video) return;
+    video.muted = true;
+    video.setAttribute("muted", "");
+    video.volume = 0;
+    setSoundUI(false);
+  };
+
+  const stopVideo = () => {
+    if (!video) return;
+    muteVideo();
+    video.pause();
   };
 
   const enableSound = async () => {
@@ -35,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setSoundUI(true);
       return true;
     } catch {
+      muteVideo();
       return false;
     }
   };
@@ -45,18 +63,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (preferReduced) {
       video.removeAttribute("autoplay");
-      video.pause();
+      stopVideo();
       if (soundToggle) soundToggle.hidden = true;
     } else {
-      // Try automatic sound on open. Many browsers block this until a gesture.
       const startWithSound = async () => {
         const ok = await enableSound();
         if (ok) return;
 
-        // Fallback: keep video playing muted until first touch/click/scroll/key.
-        video.muted = true;
-        video.setAttribute("muted", "");
-        setSoundUI(false);
+        muteVideo();
         try {
           await video.play();
         } catch {
@@ -66,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const unlock = async () => {
           const sounded = await enableSound();
           if (!sounded) return;
-          removeUnlockListeners();
+          if (unlockCleanup) unlockCleanup();
         };
 
         const removeUnlockListeners = () => {
@@ -74,8 +88,10 @@ document.addEventListener("DOMContentLoaded", () => {
           window.removeEventListener("touchstart", unlock);
           window.removeEventListener("keydown", unlock);
           window.removeEventListener("scroll", unlock);
+          unlockCleanup = null;
         };
 
+        unlockCleanup = removeUnlockListeners;
         window.addEventListener("pointerdown", unlock, { once: true, passive: true });
         window.addEventListener("touchstart", unlock, { once: true, passive: true });
         window.addEventListener("keydown", unlock, { once: true });
@@ -89,6 +105,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Stop audio when leaving the tab/site (or app is backgrounded).
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopVideo();
+        return;
+      }
+
+      // Resume muted video when user returns; they can re-enable sound.
+      if (!preferReduced) {
+        muteVideo();
+        video.play().catch(() => {});
+      }
+    });
+
+    window.addEventListener("pagehide", stopVideo);
+    window.addEventListener("beforeunload", stopVideo);
+    window.addEventListener("freeze", stopVideo);
+
     if (soundToggle) {
       soundToggle.addEventListener("pointerdown", (event) => {
         event.stopPropagation();
@@ -96,15 +130,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       soundToggle.addEventListener("click", async (event) => {
         event.stopPropagation();
-        const turningOn = video.muted || video.volume === 0;
+        if (unlockCleanup) unlockCleanup();
 
-        if (turningOn) {
+        if (!soundEnabled || video.muted || video.volume === 0) {
           const ok = await enableSound();
-          if (!ok) setSoundUI(false);
+          if (!ok) muteVideo();
         } else {
-          video.muted = true;
-          video.setAttribute("muted", "");
-          setSoundUI(false);
+          muteVideo();
         }
       });
     }
