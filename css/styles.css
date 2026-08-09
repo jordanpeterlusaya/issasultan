@@ -472,6 +472,57 @@ button {
   margin-bottom: 0;
 }
 
+.about-grid {
+  display: grid;
+  gap: 1.75rem;
+  align-items: center;
+}
+
+.about-portrait {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  background: #fff;
+}
+
+.about-portrait img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.product {
+  display: grid;
+  gap: 1.75rem;
+  align-items: center;
+}
+
+.product-media {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  background: #0e0c0b;
+}
+
+.product-media img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 768 / 501;
+  object-fit: cover;
+}
+
+.product-note {
+  margin: 1.25rem 0 0 !important;
+  font-weight: 700;
+  color: var(--primary) !important;
+}
+
 .feature-list,
 .benefit-list {
   list-style: none;
@@ -850,6 +901,12 @@ button {
 
   .footer-grid {
     grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 2.5rem;
+  }
+
+  .about-grid,
+  .product {
+    grid-template-columns: 0.9fr 1.1fr;
     gap: 2.5rem;
   }
 
