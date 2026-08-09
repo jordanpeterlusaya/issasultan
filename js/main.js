@@ -12,16 +12,13 @@ document.addEventListener("DOMContentLoaded", () => {
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });
 
-  const mediaRoot = document.querySelector(".hero-media");
-  let video = document.getElementById("hero-video");
+  const video = document.getElementById("hero-video");
   const soundToggle = document.getElementById("sound-toggle");
   const soundLabel = soundToggle?.querySelector(".sound-toggle-label");
-  const poster = "assets/images/hero-poster.jpg";
-  const videoSrc = "assets/video/sheikh-issa.mp4";
+  const audioSrc = "assets/audio/sheikh-issa.m4a";
 
   let soundOn = false;
-  let unlockCleanup = null;
-  let starting = false;
+  let audio = null;
 
   const setSoundUI = (on) => {
     soundOn = on;
@@ -33,192 +30,118 @@ document.addEventListener("DOMContentLoaded", () => {
       : soundLabel.dataset.labelOff;
   };
 
-  const clearUnlock = () => {
-    if (typeof unlockCleanup === "function") {
-      unlockCleanup();
-    }
-    unlockCleanup = null;
-  };
-
-  const buildVideo = () => {
-    const el = document.createElement("video");
-    el.id = "hero-video";
-    el.className = "hero-video";
-    el.loop = true;
-    el.playsInline = true;
-    el.preload = "auto";
-    el.poster = poster;
-    el.setAttribute("playsinline", "");
-    el.setAttribute("webkit-playsinline", "");
-    el.setAttribute("disablepictureinpicture", "");
-    el.controls = false;
-    el.muted = true;
-    el.defaultMuted = true;
-    el.volume = 0;
-
-    const source = document.createElement("source");
-    source.src = videoSrc;
-    source.type = "video/mp4";
-    el.appendChild(source);
-    return el;
-  };
-
-  const hardStop = () => {
-    clearUnlock();
+  const stopSound = () => {
     setSoundUI(false);
 
-    if (!video) return;
+    if (!audio) return;
 
     try {
-      video.pause();
+      audio.pause();
     } catch {
       // ignore
     }
 
-    video.muted = true;
-    video.defaultMuted = true;
-    video.volume = 0;
-    video.removeAttribute("src");
-    video.querySelectorAll("source").forEach((node) => {
-      node.removeAttribute("src");
-      node.remove();
-    });
+    audio.muted = true;
+    audio.volume = 0;
+    audio.removeAttribute("src");
+    audio.src = "";
+    audio.srcObject = null;
 
     try {
-      video.load();
+      audio.load();
     } catch {
       // ignore
     }
 
-    // Replace the element so Chrome cannot keep a detached audio pipeline alive.
-    if (mediaRoot && video.parentNode === mediaRoot) {
-      const next = buildVideo();
-      mediaRoot.replaceChild(next, video);
-      video = next;
-      wireVideoEvents(video);
+    audio = null;
+
+    if ("mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.playbackState = "none";
+        navigator.mediaSession.metadata = null;
+      } catch {
+        // ignore
+      }
     }
   };
 
-  const playMuted = async (target = video) => {
-    if (!target || document.hidden) return;
-    if (!target.querySelector("source")?.getAttribute("src")) {
-      const source = document.createElement("source");
-      source.src = videoSrc;
-      source.type = "video/mp4";
-      target.appendChild(source);
-      target.load();
-    }
-    target.muted = true;
-    target.defaultMuted = true;
-    target.setAttribute("muted", "");
-    target.volume = 0;
-    setSoundUI(false);
-    try {
-      await target.play();
-    } catch {
-      // ignore
-    }
+  const getAudio = () => {
+    if (audio) return audio;
+    audio = new Audio(audioSrc);
+    audio.loop = true;
+    audio.preload = "auto";
+    audio.volume = 1;
+    return audio;
   };
 
-  const playWithSound = async () => {
-    if (!video || document.hidden) return false;
-    if (!video.querySelector("source")?.getAttribute("src")) {
-      const source = document.createElement("source");
-      source.src = videoSrc;
-      source.type = "video/mp4";
-      video.appendChild(source);
-      video.load();
+  const startSound = async () => {
+    const track = getAudio();
+    track.muted = false;
+    track.volume = 1;
+
+    // Keep voice roughly in sync with the silent video.
+    if (video && Number.isFinite(video.currentTime)) {
+      try {
+        track.currentTime = video.currentTime % (track.duration || video.duration || 44);
+      } catch {
+        // ignore seek errors before metadata
+      }
     }
-    video.muted = false;
-    video.defaultMuted = false;
-    video.removeAttribute("muted");
-    video.volume = 1;
+
     try {
-      await video.play();
+      await track.play();
       setSoundUI(true);
       return true;
     } catch {
-      await playMuted(video);
+      stopSound();
       return false;
     }
   };
 
-  const wireVideoEvents = (el) => {
-    // no-op placeholder for future hooks; keeps reference updates simple
-    void el;
-  };
-
-  if (video && mediaRoot) {
+  if (video) {
     const preferReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    video.removeAttribute("autoplay");
-    wireVideoEvents(video);
+
+    // Video has NO audio track — always muted picture only.
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute("muted", "");
+    video.volume = 0;
 
     if (preferReduced) {
-      hardStop();
+      video.removeAttribute("autoplay");
+      video.pause();
       if (soundToggle) soundToggle.hidden = true;
     } else {
-      const startPlayback = async () => {
-        if (starting || document.hidden) return;
-        starting = true;
-
-        const ok = await playWithSound();
-        if (!ok && !document.hidden) {
-          await playMuted(video);
-
-          const unlock = async () => {
-            if (document.hidden || !soundToggle) return;
-            // Ignore unlock taps on the sound button itself.
-            const sounded = await playWithSound();
-            if (sounded) clearUnlock();
-          };
-
-          const removeUnlockListeners = () => {
-            window.removeEventListener("pointerdown", unlock, true);
-            window.removeEventListener("touchstart", unlock, true);
-            window.removeEventListener("keydown", unlock, true);
-          };
-
-          unlockCleanup = removeUnlockListeners;
-          window.addEventListener("pointerdown", unlock, {
-            once: true,
-            passive: true,
-            capture: true,
-          });
-          window.addEventListener("touchstart", unlock, {
-            once: true,
-            passive: true,
-            capture: true,
-          });
-          window.addEventListener("keydown", unlock, { once: true, capture: true });
-        }
-
-        starting = false;
+      const playVideo = () => {
+        video.muted = true;
+        video.volume = 0;
+        video.play().catch(() => {});
       };
 
-      if (video.readyState >= 2) {
-        startPlayback();
-      } else {
-        video.addEventListener("loadeddata", startPlayback, { once: true });
-        video.load();
-      }
+      if (video.readyState >= 2) playVideo();
+      else video.addEventListener("loadeddata", playVideo, { once: true });
     }
 
-    const onLeave = () => hardStop();
+    // Kill sound the moment user leaves or backgrounds the page.
+    const onLeave = () => stopSound();
 
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        onLeave();
-      }
-      // Do not auto-restart media when returning — user taps Washa sauti.
-    }, true);
+    document.addEventListener(
+      "visibilitychange",
+      () => {
+        if (document.hidden) onLeave();
+      },
+      true
+    );
 
     window.addEventListener("pagehide", onLeave, true);
     window.addEventListener("beforeunload", onLeave, true);
     window.addEventListener("unload", onLeave, true);
     window.addEventListener("freeze", onLeave, true);
     document.addEventListener("freeze", onLeave, true);
+    window.addEventListener("blur", () => {
+      if (document.hidden) onLeave();
+    });
 
-    // Stop sound FIRST, then navigate (WhatsApp/tel/external).
     const isLeaveLink = (link) => {
       if (!link) return false;
       const href = link.getAttribute("href") || "";
@@ -235,14 +158,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const stopThenGo = (link) => {
       const href = link.href;
       const target = link.target;
-      hardStop();
+      stopSound();
       window.setTimeout(() => {
         if (target === "_blank") {
           window.open(href, "_blank", "noopener,noreferrer");
         } else {
           window.location.href = href;
         }
-      }, 120);
+      }, 80);
     };
 
     document.addEventListener(
@@ -250,8 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       (event) => {
         const link = event.target.closest("a");
         if (!isLeaveLink(link)) return;
-        // Mute immediately on press, before click/navigation.
-        hardStop();
+        stopSound();
       },
       true
     );
@@ -268,32 +190,19 @@ document.addEventListener("DOMContentLoaded", () => {
       true
     );
 
-    window.addEventListener("blur", () => {
-      // Extra guard for mobile Chrome app switches.
-      window.setTimeout(() => {
-        if (document.hidden) hardStop();
-      }, 0);
-    });
-
     if (soundToggle) {
       soundToggle.addEventListener(
         "click",
         async (event) => {
           event.preventDefault();
           event.stopPropagation();
-          clearUnlock();
 
           if (soundOn) {
-            if (!video) return;
-            video.muted = true;
-            video.defaultMuted = true;
-            video.setAttribute("muted", "");
-            video.volume = 0;
-            setSoundUI(false);
+            stopSound();
             return;
           }
 
-          await playWithSound();
+          await startSound();
         },
         true
       );
