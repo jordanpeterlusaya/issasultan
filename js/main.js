@@ -13,38 +13,91 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("scroll", onScroll, { passive: true });
 
   const video = document.getElementById("hero-video");
+  const source = video?.querySelector("source");
   const soundToggle = document.getElementById("sound-toggle");
   const soundLabel = soundToggle?.querySelector(".sound-toggle-label");
-  let soundEnabled = false;
-  let unlockCleanup = null;
+  const videoSrc = source?.getAttribute("src") || "assets/video/sheikh-issa.mp4";
 
-  const setSoundUI = (soundOn) => {
-    soundEnabled = soundOn;
+  let soundOn = false;
+  let mediaAlive = true;
+  let unlockCleanup = null;
+  let starting = false;
+
+  const setSoundUI = (on) => {
+    soundOn = on;
     if (!soundToggle || !soundLabel) return;
-    soundToggle.setAttribute("aria-pressed", soundOn ? "true" : "false");
-    soundToggle.classList.toggle("is-on", soundOn);
-    soundLabel.textContent = soundOn
+    soundToggle.setAttribute("aria-pressed", on ? "true" : "false");
+    soundToggle.classList.toggle("is-on", on);
+    soundLabel.textContent = on
       ? soundLabel.dataset.labelOn
       : soundLabel.dataset.labelOff;
   };
 
-  const muteVideo = () => {
+  const clearUnlock = () => {
+    if (unlockCleanup) {
+      unlockCleanup();
+      unlockCleanup = null;
+    }
+  };
+
+  const ensureSource = () => {
+    if (!video || !source) return;
+    if (!source.getAttribute("src")) {
+      source.setAttribute("src", videoSrc);
+      video.load();
+    }
+    mediaAlive = true;
+  };
+
+  const killMedia = () => {
     if (!video) return;
+    clearUnlock();
+    soundOn = false;
+    setSoundUI(false);
+
+    try {
+      video.pause();
+    } catch {
+      // ignore
+    }
+
     video.muted = true;
+    video.defaultMuted = true;
     video.setAttribute("muted", "");
     video.volume = 0;
+    video.currentTime = 0;
+
+    // Detach the file so mobile browsers cannot keep playing audio in background.
+    if (source) source.removeAttribute("src");
+    video.removeAttribute("src");
+    try {
+      video.load();
+    } catch {
+      // ignore
+    }
+    mediaAlive = false;
+  };
+
+  const silenceAndPause = () => {
+    if (!video) return;
+    clearUnlock();
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute("muted", "");
+    video.volume = 0;
+    try {
+      video.pause();
+    } catch {
+      // ignore
+    }
     setSoundUI(false);
   };
 
-  const stopVideo = () => {
-    if (!video) return;
-    muteVideo();
-    video.pause();
-  };
-
-  const enableSound = async () => {
+  const playWithSound = async () => {
     if (!video) return false;
+    ensureSource();
     video.muted = false;
+    video.defaultMuted = false;
     video.removeAttribute("muted");
     video.volume = 1;
     try {
@@ -52,92 +105,124 @@ document.addEventListener("DOMContentLoaded", () => {
       setSoundUI(true);
       return true;
     } catch {
-      muteVideo();
+      silenceAndPause();
       return false;
+    }
+  };
+
+  const playMuted = async () => {
+    if (!video) return;
+    ensureSource();
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute("muted", "");
+    video.volume = 0;
+    setSoundUI(false);
+    try {
+      await video.play();
+    } catch {
+      // ignore
     }
   };
 
   if (video) {
     const preferReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    video.volume = 1;
+    video.controls = false;
+    video.disablePictureInPicture = true;
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
 
     if (preferReduced) {
       video.removeAttribute("autoplay");
-      stopVideo();
+      killMedia();
       if (soundToggle) soundToggle.hidden = true;
     } else {
-      const startWithSound = async () => {
-        const ok = await enableSound();
-        if (ok) return;
+      const startPlayback = async () => {
+        if (starting || document.hidden) return;
+        starting = true;
+        const ok = await playWithSound();
+        if (!ok && !document.hidden) {
+          await playMuted();
 
-        muteVideo();
-        try {
-          await video.play();
-        } catch {
-          // ignore
+          const unlock = async () => {
+            if (document.hidden) return;
+            const sounded = await playWithSound();
+            if (sounded) clearUnlock();
+          };
+
+          const removeUnlockListeners = () => {
+            window.removeEventListener("pointerdown", unlock, true);
+            window.removeEventListener("touchstart", unlock, true);
+            window.removeEventListener("keydown", unlock, true);
+            unlockCleanup = null;
+          };
+
+          unlockCleanup = removeUnlockListeners;
+          window.addEventListener("pointerdown", unlock, { once: true, passive: true, capture: true });
+          window.addEventListener("touchstart", unlock, { once: true, passive: true, capture: true });
+          window.addEventListener("keydown", unlock, { once: true, capture: true });
         }
-
-        const unlock = async () => {
-          const sounded = await enableSound();
-          if (!sounded) return;
-          if (unlockCleanup) unlockCleanup();
-        };
-
-        const removeUnlockListeners = () => {
-          window.removeEventListener("pointerdown", unlock);
-          window.removeEventListener("touchstart", unlock);
-          window.removeEventListener("keydown", unlock);
-          window.removeEventListener("scroll", unlock);
-          unlockCleanup = null;
-        };
-
-        unlockCleanup = removeUnlockListeners;
-        window.addEventListener("pointerdown", unlock, { once: true, passive: true });
-        window.addEventListener("touchstart", unlock, { once: true, passive: true });
-        window.addEventListener("keydown", unlock, { once: true });
-        window.addEventListener("scroll", unlock, { once: true, passive: true });
+        starting = false;
       };
 
+      // Avoid native autoplay fighting our JS control.
+      video.removeAttribute("autoplay");
+
       if (video.readyState >= 2) {
-        startWithSound();
+        startPlayback();
       } else {
-        video.addEventListener("loadeddata", startWithSound, { once: true });
+        ensureSource();
+        video.addEventListener("loadeddata", startPlayback, { once: true });
+        video.load();
       }
     }
 
-    // Stop audio when leaving the tab/site (or app is backgrounded).
+    const onLeave = () => {
+      killMedia();
+    };
+
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        stopVideo();
+        onLeave();
         return;
       }
-
-      // Resume muted video when user returns; they can re-enable sound.
+      // Do not auto-restart with sound when returning — wait for user.
       if (!preferReduced) {
-        muteVideo();
-        video.play().catch(() => {});
+        playMuted();
       }
     });
 
-    window.addEventListener("pagehide", stopVideo);
-    window.addEventListener("beforeunload", stopVideo);
-    window.addEventListener("freeze", stopVideo);
+    window.addEventListener("pagehide", onLeave, { capture: true });
+    window.addEventListener("beforeunload", onLeave);
+    window.addEventListener("unload", onLeave);
+    window.addEventListener("freeze", onLeave);
+    window.addEventListener("blur", () => {
+      // Some mobile browsers keep audio after app switch; kill on blur too.
+      if (document.hidden) onLeave();
+    });
+
+    document.addEventListener("freeze", onLeave);
 
     if (soundToggle) {
-      soundToggle.addEventListener("pointerdown", (event) => {
-        event.stopPropagation();
-      });
-
       soundToggle.addEventListener("click", async (event) => {
+        event.preventDefault();
         event.stopPropagation();
-        if (unlockCleanup) unlockCleanup();
+        clearUnlock();
 
-        if (!soundEnabled || video.muted || video.volume === 0) {
-          const ok = await enableSound();
-          if (!ok) muteVideo();
-        } else {
-          muteVideo();
+        if (soundOn) {
+          // Turn sound off but keep video picture playing.
+          video.muted = true;
+          video.defaultMuted = true;
+          video.setAttribute("muted", "");
+          video.volume = 0;
+          setSoundUI(false);
+          if (video.paused && mediaAlive) {
+            playMuted();
+          }
+          return;
         }
+
+        await playWithSound();
       });
     }
   }
