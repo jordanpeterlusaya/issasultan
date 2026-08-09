@@ -218,19 +218,52 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("freeze", onLeave, true);
     document.addEventListener("freeze", onLeave, true);
 
-    // Chrome keeps playing when opening WhatsApp/tel in another context.
+    // Stop sound FIRST, then navigate (WhatsApp/tel/external).
+    const isLeaveLink = (link) => {
+      if (!link) return false;
+      const href = link.getAttribute("href") || "";
+      return (
+        link.target === "_blank" ||
+        href.startsWith("tel:") ||
+        href.startsWith("sms:") ||
+        href.startsWith("https://wa.me") ||
+        href.startsWith("http://") ||
+        href.startsWith("https://")
+      );
+    };
+
+    const stopThenGo = (link) => {
+      const href = link.href;
+      const target = link.target;
+      hardStop();
+      window.setTimeout(() => {
+        if (target === "_blank") {
+          window.open(href, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.href = href;
+        }
+      }, 120);
+    };
+
+    document.addEventListener(
+      "pointerdown",
+      (event) => {
+        const link = event.target.closest("a");
+        if (!isLeaveLink(link)) return;
+        // Mute immediately on press, before click/navigation.
+        hardStop();
+      },
+      true
+    );
+
     document.addEventListener(
       "click",
       (event) => {
         const link = event.target.closest("a");
-        if (!link) return;
-        const href = link.getAttribute("href") || "";
-        const isLeaveIntent =
-          link.target === "_blank" ||
-          href.startsWith("tel:") ||
-          href.startsWith("https://wa.me") ||
-          href.startsWith("http");
-        if (isLeaveIntent) hardStop();
+        if (!isLeaveLink(link)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        stopThenGo(link);
       },
       true
     );
