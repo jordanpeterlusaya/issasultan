@@ -487,12 +487,32 @@ button {
   background: #fff;
 }
 
-.about-portrait img {
+.about-media {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.about-practice {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  background: #fff;
+}
+
+.about-portrait img,
+.about-practice img {
   width: 100%;
   height: auto;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   object-position: center top;
+}
+
+.about-practice img {
+  aspect-ratio: 4 / 3;
+  object-position: center;
 }
 
 .product {
@@ -521,6 +541,100 @@ button {
   margin: 1.25rem 0 0 !important;
   font-weight: 700;
   color: var(--primary) !important;
+}
+
+.product-showcase {
+  display: grid;
+  gap: 1rem;
+}
+
+.product-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  display: grid;
+}
+
+.product-card img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.product-card-body {
+  padding: 1.1rem 1.15rem 1.25rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.product-card-body h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.product-card-body p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.text-link {
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.proof-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.proof-shot,
+.proof-video {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.proof-shot img,
+.proof-video video {
+  width: 100%;
+  display: block;
+  aspect-ratio: 9 / 16;
+  max-height: 34rem;
+  object-fit: cover;
+  background: #111;
+}
+
+.proof-video video {
+  aspect-ratio: 9 / 16;
+  object-fit: contain;
+}
+
+.proof-shot figcaption,
+.proof-video p {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.proof-cta {
+  margin-top: 1.5rem;
 }
 
 .feature-list,
@@ -842,6 +956,18 @@ button {
   .service-grid {
     grid-template-columns: 1fr 1fr;
   }
+
+  .product-showcase {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .about-media {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .about-practice img {
+    aspect-ratio: 3 / 4;
+  }
 }
 
 /* Tablet */
@@ -908,6 +1034,20 @@ button {
   .product {
     grid-template-columns: 0.9fr 1.1fr;
     gap: 2.5rem;
+  }
+
+  .about-media {
+    grid-template-columns: 1fr;
+  }
+
+  .product-showcase {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .proof-grid {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
   }
 
   .media-pair {

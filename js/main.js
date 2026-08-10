@@ -227,4 +227,15 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
   }
+
+  // Proof videos: one at a time; stop hero audio when playing
+  const proofVideos = document.querySelectorAll(".proof-video video");
+  proofVideos.forEach((vid) => {
+    vid.addEventListener("play", () => {
+      if (typeof stopSound === "function") stopSound();
+      proofVideos.forEach((other) => {
+        if (other !== vid) other.pause();
+      });
+    });
+  });
 });
