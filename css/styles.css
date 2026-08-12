@@ -584,7 +584,7 @@ button {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  object-position: center top;
+  object-position: center;
   transition: transform 0.45s ease;
 }
 
@@ -1130,7 +1130,9 @@ button {
   }
 
   .product-showcase {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr 1fr;
+    max-width: 52rem;
+    margin-inline: auto;
   }
 
   .trust-grid {
