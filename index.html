@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#14110f" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="description"
@@ -16,9 +16,47 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=14" />
+    <link rel="stylesheet" href="css/styles.css?v=17" />
+    <style>
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #000 !important;
+        overflow: hidden !important;
+        height: 100% !important;
+      }
+
+      body > *:not(.site-lock) {
+        display: none !important;
+      }
+
+      .site-lock {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        display: grid;
+        place-items: center;
+        background: #000;
+        color: #fff;
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        text-align: center;
+        padding: 1.5rem;
+      }
+
+      .site-lock p {
+        margin: 0;
+        font-size: clamp(1.25rem, 4vw, 1.75rem);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+    </style>
   </head>
   <body>
+    <div class="site-lock" role="alert" aria-live="assertive">
+      <p>This website is locked</p>
+    </div>
+
     <a class="skip-link" href="#main">Ruka kwenda maudhui</a>
 
     <header class="site-header" id="site-header">
@@ -135,7 +173,7 @@
 
       <section class="section" id="kuhusu">
         <div class="container about-grid reveal">
-          <div class="about-media">
+          <div class="about-media gallery-unit">
             <figure class="about-portrait">
               <img
                 src="assets/images/issa-portrait.png"
@@ -172,14 +210,36 @@
 
       <section class="section section-alt" id="pete">
         <div class="container product reveal">
-          <div class="product-media">
-            <img
-              src="assets/images/pete-siri.png"
-              alt="Pete ya Siri za Waarabu — pete ya mafanikio na maajabu"
-              width="768"
-              height="501"
-              loading="lazy"
-            />
+          <div class="product-visual gallery-unit">
+            <figure class="product-media">
+              <img
+                src="assets/images/pete-siri.png"
+                alt="Pete ya Siri za Waarabu — pete ya mafanikio na maajabu"
+                width="768"
+                height="501"
+                loading="lazy"
+              />
+            </figure>
+            <div class="media-pair" id="kinga">
+              <figure>
+                <img
+                  src="assets/images/ring-red.png"
+                  alt="Pete ya fedha na dhahabu yenye jiwe jekundu"
+                  width="640"
+                  height="640"
+                  loading="lazy"
+                />
+              </figure>
+              <figure>
+                <img
+                  src="assets/images/ring-black.png"
+                  alt="Pete ya fedha na dhahabu yenye jiwe jeusi"
+                  width="640"
+                  height="640"
+                  loading="lazy"
+                />
+              </figure>
+            </div>
           </div>
           <div class="product-copy">
             <p class="eyebrow">Bidhaa maalum</p>
@@ -210,6 +270,10 @@
                 <strong>Matokeo ya kushangaza</strong>
                 <span>Unaweza kutamani jambo lolote kupitia pete hii.</span>
               </li>
+              <li>
+                <strong>Kinga na zindiko</strong>
+                <span>Pete za kinga zinazolinda mwili na maisha yako.</span>
+              </li>
             </ul>
 
             <p class="product-note">
@@ -229,7 +293,7 @@
         </div>
       </section>
 
-      <section class="section section-alt" id="mapenzi">
+      <section class="section" id="mapenzi">
         <div class="container narrow reveal">
           <p class="eyebrow">Huduma kuu</p>
           <h2>Unasumbuliwa na mapenzi?</h2>
@@ -265,7 +329,7 @@
         </div>
       </section>
 
-      <section class="section" id="dawa">
+      <section class="section section-alt" id="dawa">
         <div class="container reveal">
           <div class="section-head">
             <p class="eyebrow">Dawa maalum</p>
@@ -276,8 +340,13 @@
             </p>
           </div>
 
-          <div class="product-showcase">
-            <article class="product-card">
+          <div class="product-showcase gallery-unit">
+            <a
+              class="product-card"
+              href="https://wa.me/255756465818?text=Habari%2C%20nahitaji%20Dawa%20ya%20Kizazi%20kwa%20kina%20mama"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img
                 src="assets/images/products/dawa-kizazi.jpg"
                 alt="Dawa ya kizazi kwa kina mama — mimea ya asili"
@@ -288,22 +357,19 @@
               <div class="product-card-body">
                 <h3>Dawa ya Kizazi — Kina Mama</h3>
                 <p>
-                  Imeandaliwa kwa mimea ya asili yenye baraka — inafungua njia ya uzazi,
-                  inaimarisha tumbo la mama, na inarudisha matumaini ya kuwa mzaa.
-                  Kwa mama mwenye miaka mingi bila mtoto, au mwenye matatizo ya kizazi —
-                  hii ndiyo dawa unayotafuta.
+                  Mimea ya asili yenye baraka — inafungua njia ya uzazi, inaimarisha tumbo la mama,
+                  na inarudisha matumaini ya kuwa mzaa.
                 </p>
-                <a
-                  class="text-link"
-                  href="https://wa.me/255756465818?text=Habari%2C%20nahitaji%20Dawa%20ya%20Kizazi%20kwa%20kina%20mama"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >Agiza WhatsApp</a
-                >
+                <span class="product-card-cta">Agiza WhatsApp</span>
               </div>
-            </article>
+            </a>
 
-            <article class="product-card">
+            <a
+              class="product-card"
+              href="https://wa.me/255756465818?text=Habari%2C%20nahitaji%20Dawa%20ya%20Nguvu%20za%20Kiume"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img
                 src="assets/images/products/nguvu-za-kiume.jpg"
                 alt="Dawa ya nguvu za kiume — mimea ya asili"
@@ -314,24 +380,17 @@
               <div class="product-card-body">
                 <h3>Nguvu za Kiume</h3>
                 <p>
-                  Inatibu kabisa tatizo la udhaifu wa kiume — inakurudisha nguvu, shauku,
-                  na uwezo wa kweli. Unakuwa kama simba: imara, thabiti, na mwenye majivuno
-                  mbele ya mke wako. Mwisho wa aibu — mwanzo wa nguvu mpya.
+                  Inatibu kabisa udhaifu wa kiume — unakuwa kama simba: imara, thabiti,
+                  na mwenye majivuno mbele ya mke wako.
                 </p>
-                <a
-                  class="text-link"
-                  href="https://wa.me/255756465818?text=Habari%2C%20nahitaji%20Dawa%20ya%20Nguvu%20za%20Kiume"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >Agiza WhatsApp</a
-                >
+                <span class="product-card-cta">Agiza WhatsApp</span>
               </div>
-            </article>
+            </a>
           </div>
         </div>
       </section>
 
-      <section class="section section-alt" id="ushahidi">
+      <section class="section" id="ushahidi">
         <div class="container reveal">
           <div class="section-head">
             <p class="eyebrow">Maoni</p>
@@ -341,7 +400,7 @@
             </p>
           </div>
 
-          <div class="proof-grid">
+          <div class="proof-grid gallery-unit">
             <figure class="proof-shot">
               <img
                 src="assets/images/proof/ushahidi-chat.jpg"
@@ -382,38 +441,6 @@
             <a class="btn btn-primary" href="https://wa.me/255756465818" target="_blank" rel="noopener noreferrer"
               >Wasiliana sasa</a
             >
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="kinga">
-        <div class="container reveal">
-          <div class="section-head">
-            <p class="eyebrow">Kinga</p>
-            <h2>Kinga, zindiko na nguvu</h2>
-            <p class="lead">
-              Pete na dawa za asili zinazotumika katika tiba ya kiroho na kulinda maisha yako.
-            </p>
-          </div>
-          <div class="media-pair">
-            <figure>
-              <img
-                src="assets/images/ring-red.png"
-                alt="Pete ya fedha na dhahabu yenye jiwe jekundu"
-                width="640"
-                height="640"
-                loading="lazy"
-              />
-            </figure>
-            <figure>
-              <img
-                src="assets/images/ring-black.png"
-                alt="Pete ya fedha na dhahabu yenye jiwe jeusi"
-                width="640"
-                height="640"
-                loading="lazy"
-              />
-            </figure>
           </div>
         </div>
       </section>
@@ -560,6 +587,6 @@
       </a>
     </nav>
 
-    <script src="js/main.js?v=14"></script>
+    <script src="js/main.js?v=17"></script>
   </body>
 </html>
