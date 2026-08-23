@@ -868,7 +868,7 @@ button {
     radial-gradient(ellipse 70% 60% at 20% 0%, rgba(166, 124, 45, 0.18), transparent 50%),
     var(--ink);
   color: var(--hero-ink);
-  padding: clamp(3rem, 8vw, 5rem) 0;
+  padding: clamp(2.5rem, 7vw, 5rem) 0 calc(2.5rem + var(--bar-h) * 0.35);
 }
 
 .cta-band h2 {
@@ -877,28 +877,73 @@ button {
 
 .contact-grid {
   display: grid;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-top: 1.35rem;
 }
 
 .contact-card {
-  display: grid;
-  gap: 0.2rem;
-  padding: 1.15rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 5.25rem;
+  padding: 1rem 0.95rem;
   text-decoration: none;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(248, 244, 236, 0.14);
-  border-radius: var(--radius);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  border-radius: 16px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.contact-card:hover {
+.contact-card:active {
+  transform: scale(0.98);
+}
+
+.contact-card:hover,
+.contact-card:focus-visible {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(166, 124, 45, 0.5);
 }
 
+.contact-card--call {
+  border-color: rgba(154, 28, 28, 0.35);
+}
+
+.contact-card--wa {
+  border-color: rgba(212, 168, 74, 0.45);
+  background: rgba(184, 137, 47, 0.14);
+}
+
+.contact-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent-soft);
+}
+
+.contact-card--call .contact-icon {
+  color: #ffb4b4;
+  background: rgba(154, 28, 28, 0.22);
+}
+
+.contact-card--wa .contact-icon {
+  color: #ffe08a;
+  background: rgba(184, 137, 47, 0.28);
+}
+
+.contact-text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
 .contact-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -906,9 +951,10 @@ button {
 }
 
 .contact-value {
-  font-size: 1.35rem;
+  font-size: clamp(1.05rem, 4.2vw, 1.3rem);
   font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .note {
@@ -982,28 +1028,53 @@ button {
   z-index: 70;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.55rem;
-  padding: 0.75rem 0.85rem calc(0.75rem + var(--safe-bottom));
-  background: rgba(16, 14, 12, 0.94);
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem calc(0.65rem + var(--safe-bottom));
+  background: rgba(16, 14, 12, 0.96);
   backdrop-filter: blur(16px);
-  border-top: 1px solid rgba(212, 168, 74, 0.2);
+  border-top: 1px solid rgba(212, 168, 74, 0.22);
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
 }
 
 .mobile-bar-btn {
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 0.12rem;
-  min-height: 3.15rem;
-  border-radius: 12px;
+  gap: 0.55rem;
+  min-height: 3.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 14px;
   text-decoration: none;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bar-btn:active {
+  transform: scale(0.98);
+}
+
+.mobile-bar-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mobile-bar-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  line-height: 1.15;
 }
 
 .mobile-bar-btn small {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 600;
   opacity: 0.88;
 }
@@ -1017,6 +1088,7 @@ button {
 .mobile-bar-btn.wa {
   background: linear-gradient(135deg, var(--accent-soft), var(--accent));
   color: #1a1512;
+  box-shadow: 0 8px 20px rgba(184, 137, 47, 0.28);
 }
 
 /* Reveal */
@@ -1166,6 +1238,10 @@ button {
 
   .service-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .cta-band {
+    padding-bottom: clamp(3rem, 8vw, 5rem);
   }
 
   .contact-grid {
